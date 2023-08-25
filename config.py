@@ -8,4 +8,4 @@ DEBUG = True
 
 # Connect to the database
 SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:abc@localhost:5432/fyyur'
-
+SQLALCHEMY_TRACK_MODIFICATIONS = False

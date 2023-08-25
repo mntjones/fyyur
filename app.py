@@ -3,8 +3,11 @@
 #----------------------------------------------------------------------------#
 
 import json
-import dateutil.parser
-import babel
+#import dateutil.parser
+#import babel
+import collections
+import collections.abc
+
 
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
@@ -26,6 +29,7 @@ moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 migrate = Migrate(app,db)
+collections.Callable = collections.abc.Callable
 
 #----------------------------------------------------------------------------#
 # Models.
@@ -77,11 +81,7 @@ class Artist(db.Model):
   def __repr__(self):
     return f'<Artist {self.id} name: {self.name}>'
 
-with app.app_context():
-  db.create_all()
-
-
-class Show(db.Model)
+class Show(db.Model):
   __tablename__ = 'Show'
 
   id = db.Column(db.Integer, primary_key=True)
@@ -92,6 +92,8 @@ class Show(db.Model)
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+with app.app_context():
+  db.create_all()
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -554,4 +556,18 @@ if __name__ == '__main__':
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+'''
+
+
+# Troubleshooting
+
+'''
+Error:
+ImportError: cannot import name 'Markup' from 'jinja2' 
+(/Users/monica/cd0037-API-Development-and-Documentation-exercises/1_Requests_Starter/venv/lib/python3.11/site-packages/jinja2/__init__.py)
+
+Solution:
+
+
+
 '''
