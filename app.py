@@ -7,7 +7,7 @@ import dateutil.parser
 import babel
 import collections
 import collections.abc
-
+import datetime
 
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
@@ -138,13 +138,13 @@ def venues():
     for venue in venues:
       # shows filtered using current time to determine upcoming shows
       num_upcoming_shows = venue.shows.filter(Show.start_time > current_time).all()       
-    
+      # add venue data
       venue_data.append({
         "city": venue.city,
         "state": venue.state,
         "venues": [{
           "id": venue.id,
-          "name":venue.name,
+          "name": venue.name,
           "num_upcoming_shows": len(num_upcoming_shows)}]
           })
 
@@ -152,17 +152,27 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-  # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-  # seach for Hop should return "The Musical Hop".
-  # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+  # get search term from form
+  search_term = request.form.get('search_term', '')
+  #searching for search term in db
+  venues = db.session.query(Venue).filter(Venue.name.ilike('%' + search_term + '%')).all()
+  matching_venues = []
+
+  for venue in venues:
+    num_upcoming_shows = venue.shows.filter(Show.start_time > current_time).all()
+    
+    matching_venues.append({
+      "id": venue.id,
+      "name": venue.name,
+      "num_upcoming_shows": num_upcoming_shows
+      })
+
+  response = {
+    "count": len(venues),
+    "matching_venues": matching_venues
   }
+    
+
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
 @app.route('/venues/<int:venue_id>')
