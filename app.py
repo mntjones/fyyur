@@ -8,7 +8,7 @@ import babel
 import collections
 import collections.abc
 
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import Flask, render_template, request, Response, flash, redirect, url_for, abort
 from flask_moment import Moment
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -18,6 +18,7 @@ import logging
 from logging import Formatter, FileHandler
 from forms import *
 from datetime import datetime
+from sqlalchemy import desc
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -27,7 +28,6 @@ app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
-
 
 migrate = Migrate(app,db)
 collections.Callable = collections.abc.Callable
@@ -76,7 +76,7 @@ class Artist(db.Model):
   image_link = db.Column(db.String(500))
   website = db.Column(db.String(500))
     
-  seeking_venues = db.Column(db.Boolean(), default=True)
+  seeking_venue = db.Column(db.Boolean(), default=True)
   seeking_description = db.Column(db.String(120))
 
   shows = db.relationship('Show', backref='Artist', lazy=True)
@@ -88,8 +88,8 @@ class Show(db.Model):
   __tablename__ = 'Show'
 
   id = db.Column(db.Integer, primary_key=True)
-  artist_id = db.Column(db.Integer(), db.ForeignKey('Artist.id'), nullable=False)
-  venue_id = db.Column(db.Integer(), db.ForeignKey('Venue.id'), nullable=False)
+  artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+  venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
   start_time = db.Column(db.DateTime(timezone=True), nullable=False)
 
 with app.app_context():
