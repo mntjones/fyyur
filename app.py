@@ -7,7 +7,6 @@ import dateutil.parser
 import babel
 import collections
 import collections.abc
-import datetime
 
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
@@ -19,8 +18,6 @@ import logging
 from logging import Formatter, FileHandler
 from forms import *
 from datetime import datetime
-
-import sys
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -54,7 +51,7 @@ class Venue(db.Model):
   facebook_link = db.Column(db.String(120))
   image_link = db.Column(db.String(500))
   website = db.Column(db.String(500))
-
+    
   seeking_talent = db.Column(db.Boolean(), default=True)
   seeking_description = db.Column(db.String(500))
 
@@ -78,7 +75,7 @@ class Artist(db.Model):
   facebook_link = db.Column(db.String(120))
   image_link = db.Column(db.String(500))
   website = db.Column(db.String(500))
-
+    
   seeking_venues = db.Column(db.Boolean(), default=True)
   seeking_description = db.Column(db.String(120))
 
@@ -331,7 +328,7 @@ def show_artist(artist_id):
     "city": artist.city,
     "state": artist.state,
     "phone": artist.phone,
-    "website": artist.website_link,
+    "website": artist.website,
     "facebook_link": artist.facebook_link,
     "seeking_venue": artist.seeking_venue,
     "seeking_description": artist.seeking_description,
@@ -356,7 +353,7 @@ def edit_artist(artist_id):
   form.city.data = artist.city
   form.state.data = artist.state
   form.phone.data = artist.phone
-  form.website.data = artist.website_link
+  form.website.data = artist.website
   form.facebook_link.data = artist.facebook_link
   form.seeking_venue.data = artist.seeking_venue
   form.seeking_description.data = artist.seeking_description
@@ -378,7 +375,7 @@ def edit_artist_submission(artist_id):
     artist.city: form.city.data,
     artist.state: form.state.data,
     artist.phone: form.phone.data,
-    artist.website_link: form.website.data,
+    artist.website: form.website.data,
     artist.facebook_link: form.facebook_link.data,
     artist.seeking_venue: form.seeking_venue.data,
     artist.seeking_description: form.seeking_description.data,
@@ -411,7 +408,7 @@ def edit_venue(venue_id):
     "city": venue_info.city,
     "state": venue_info.state,
     "phone": venue_info.phone,
-    "website": venue_info.website_link,
+    "website": venue_info.website,
     "facebook_link": venue_info.facebook_link,
     "seeking_talent": venue_info.seeking_talent,
     "seeking_description": venue_info.seeking_description,
@@ -434,7 +431,7 @@ def edit_venue_submission(venue_id):
     venue.phone = request.form.get('phone')
     venue.facebook_link = request.form.get('facebook_link')
     venue.image_link = request.form.get('image_link')
-    venue.website = request.form.get('website_link')
+    venue.website = request.form.get('website')
     venue.seeking_talent = request.form.get('seeking_talent')
     venue.seeking_description = request.form.get('seeking_description')
 
@@ -468,7 +465,7 @@ def create_artist_submission():
     artist.city = form.city.data
     artist.state = form.state.data
     artist.phone = form.phone.data
-    artist.website_link = form.website.data
+    artist.website = form.website.data
     artist.facebook_link = form.facebook_link.data
     artist.seeking_venue = form.seeking_venue.data
     artist.seeking_description = form.seeking_description.data
