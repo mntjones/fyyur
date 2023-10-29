@@ -53,7 +53,7 @@ class Venue(db.Model):
 
   facebook_link = db.Column(db.String(120))
   image_link = db.Column(db.String(500))
-  website_link = db.Column(db.String(500))
+  website = db.Column(db.String(500))
 
   seeking_talent = db.Column(db.Boolean(), default=True)
   seeking_description = db.Column(db.String(500))
@@ -77,7 +77,7 @@ class Artist(db.Model):
 
   facebook_link = db.Column(db.String(120))
   image_link = db.Column(db.String(500))
-  website_link = db.Column(db.String(500))
+  website = db.Column(db.String(500))
 
   seeking_venues = db.Column(db.Boolean(), default=True)
   seeking_description = db.Column(db.String(120))
@@ -207,7 +207,7 @@ def show_venue(venue_id):
       "city": venue.city,
       "state": venue.state,
       "phone": venue.phone,
-      "website": venue.website_link,
+      "website": venue.website,
       "facebook": venue.facebook_link,
       "seeking talent?": venue.seeking_talent,
       "seeking description": venue.seeking_description,
@@ -234,19 +234,19 @@ def create_venue_submission():
   form = VenueForm(request.form)
 
   #creating a new venue to add to db
-  venue = Venue(
-    name = form.name.data,
-    genres = form.genres.data,
-    address = form.address.data,
-    city = form.city.data,
-    state = form.state.data,
-    phone = form.phone.data,
-    website = form.website.data,
-    facebook_link = form.facebook_link.data,
-    seeking_talent = form.seeking_talent.data,
-    seeking_description = form.seeking_description.data,
-    image_link = form.image_link.data
-  )
+  venue = Venue()
+
+  venue.name = form.name.data
+  venue.genres = ', '.join(form.getlist('genres'))
+  venue.address = form.address.data
+  venue.city = form.city.data
+  venue.state = form.state.data
+  venue.phone = form.phone.data
+  venue.website = form.website.data
+  venue.facebook_link = form.facebook_link.data
+  venue.seeking_talent = form.seeking_venue.data
+  venue.seeking_description = form.seeking_description.data
+  venue.image_link = form.image_link.data
 
   try:
     db.session.add(venue)
@@ -494,10 +494,24 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-  # displays list of shows at /shows
-  # TODO: replace with real venues data.
+  show_data = []
 
-  return render_template('pages/shows.html', shows=data)
+  #get all shows, ordered by start time
+  shows = db.session.query(Show).order_by(desc(Show.start_time)).all()
+
+  for show in shows:
+    artist = db.session.query(Artist.name, Artist.image_link).filter(Artist.id == show.artist_id).one()
+    venue = db.session.query(Venue.name).filter(Venue.id == show.venue_id).one()
+    show_data.append({
+      "venue_id": show.venue_id,
+      "venue_name": venue.name,
+      "artist_id": show.artist_id,
+      "artist_name":artist.name,
+      "artist_image_link": artist.image_link,
+      "start_time": show.start_time.strftime('%m/%d/%Y')
+    })
+
+  return render_template('pages/shows.html', shows=show_data)
 
 @app.route('/shows/create')
 def create_shows():
@@ -507,14 +521,27 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-  # called to create new shows in the db, upon submitting new show listing form
-  # TODO: insert form data as a new Show record in the db, instead
+  
+  new_show = Show()
 
-  # on successful db insert, flash success
-  flash('Show was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Show could not be listed.')
-  # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+  try:
+    new_show.venue_id = request.form.get('venue_id')
+    new_show.artist_id = request.form.get('artist_id')
+    new_show.start_time = request.form.get('start_time')
+
+    db.session.add(new_show)
+    db.session.commit()
+
+    flash('Show was successfully listed!')
+
+  except:
+    db.session.rollback()
+    flash('Show was not created - ERROR')
+    abort(500)
+
+  finally:
+    db.session.close()
+
   return render_template('pages/home.html')
 
 @app.errorhandler(404)
