@@ -3,8 +3,8 @@
 #----------------------------------------------------------------------------#
 
 import json
-#import dateutil.parser
-#import babel
+import dateutil.parser
+import babel
 import collections
 import collections.abc
 
@@ -20,6 +20,8 @@ from logging import Formatter, FileHandler
 from forms import *
 from datetime import datetime
 
+import sys
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -28,6 +30,8 @@ app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
+
+
 migrate = Migrate(app,db)
 collections.Callable = collections.abc.Callable
 
@@ -123,30 +127,28 @@ def index():
 
 @app.route('/venues')
 def venues():
-  # TODO: replace with real venues data.
-  #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  return render_template('pages/venues.html', areas=data);
+  
+  cities = db.session.query(Venue.city, Venue.state).group_by(Venue.city, Venue.state).all()
+  venue_data=[]
+  current_time = datetime.now()
+
+  for city in cities:
+    # for each city, state - filtering the venues in that city
+    venues = db.session.query(Venue.id, Venue.name).filter(Venue.city == city[0]).filter(Venue.state == city[1]).all()
+    for venue in venues:
+      # shows filtered using current time to determine upcoming shows
+      num_upcoming_shows = venue.shows.filter(Show.start_time > current_time).all()       
+    
+      venue_data.append({
+        "city": venue.city,
+        "state": venue.state,
+        "venues": [{
+          "id": venue.id,
+          "name":venue.name,
+          "num_upcoming_shows": len(num_upcoming_shows)}]
+          })
+
+  return render_template('pages/venues.html', areas=venue_data);
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
